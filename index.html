@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expo V1 | Accounting</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --dark: #1a1a1a;
+            --gray: #f4f7f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gray);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; color: var(--dark); font-size: 24px; letter-spacing: 1px; }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-clear { background: var(--danger); color: white; }
+        .btn-clear:hover { background: #bd2130; }
+        .btn-add { background: var(--primary); color: white; width: 100%; margin-top: 15px; }
+        .btn-pdf { background: var(--dark); color: white; margin-top: 25px; width: 100%; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .balance { background: var(--primary); }
+        .income { background: var(--success); }
+        .expense { background: var(--danger); }
+
+        /* Updated Form Layout */
+        .input-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        input {
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fafafa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        th {
+            background: #f8f9fa;
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+            color: #444;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .amt-pos { color: var(--success); font-weight: bold; }
+        .amt-neg { color: var(--danger); font-weight: bold; }
+
+        @media (max-width: 600px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>EXPO V1</h1>
+        <button class="btn btn-clear" onclick="clearRecords()">Clear Records</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="card income">
+            <small>Total Earnings</small>
+            <div id="total-income" style="font-size: 1.2rem; font-weight: bold;">R 0.00</div>
+        </div>
+        <div class="card expense">
+            <small>Total Expenditures</small>
+            <div id="total-expense" style="font-size: 1.2rem; font-weight: bold;">R 0.00</div>
+        </div>
+        <div class="card balance">
+            <small>Net Balance</small>
+            <div id="net-balance" style="font-size: 1.2rem; font-weight: bold;">R 0.00</div>
+        </div>
+    </div>
+
+    <div class="input-stack">
+        <div class="input-group">
+            <label>Transaction Description</label>
+            <input type="text" id="desc" placeholder="e.g. Freelance Project or Grocery Shopping">
+        </div>
+        
+        <div class="input-group">
+            <label>Amount (Use '-' for expenses)</label>
+            <input type="number" id="amount" placeholder="e.g. 1500 or -250">
+        </div>
+
+        <div class="input-group">
+            <label>Date Stamp</label>
+            <input type="date" id="date">
+        </div>
+    </div>
+    
+    <button class="btn btn-add" onclick="addTransaction()">Record Transaction</button>
+
+    <table id="transaction-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount (ZAR)</th>
+            </tr>
+        </thead>
+        <tbody id="list-body">
+            </tbody>
+    </table>
+
+    <button class="btn btn-pdf" onclick="downloadPDF()">Generate PDF Report</button>
+</div>
+
+<script>
+    let transactions = JSON.parse(localStorage.getItem('expo_v1_data')) || [];
+
+    function updateUI() {
+        const listBody = document.getElementById('list-body');
+        listBody.innerHTML = '';
+        
+        let income = 0;
+        let expense = 0;
+
+        // Sort transactions by ID descending to show newest at top of list
+        const displayData = [...transactions].reverse();
+
+        displayData.forEach((t) => {
+            const row = document.createElement('tr');
+            const isPositive = t.amount >= 0;
+            const amtClass = isPositive ? 'amt-pos' : 'amt-neg';
+            const formattedAmt = `R ${Math.abs(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            const sign = isPositive ? '+' : '-';
+
+            if(isPositive) income += parseFloat(t.amount);
+            else expense += Math.abs(parseFloat(t.amount));
+
+            row.innerHTML = `
+                <td>#${t.id}</td>
+                <td>${t.date}</td>
+                <td>${t.description}</td>
+                <td class="${amtClass}">${sign} ${formattedAmt}</td>
+            `;
+            listBody.appendChild(row);
+        });
+
+        document.getElementById('total-income').innerText = `R ${income.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('total-expense').innerText = `R ${expense.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('net-balance').innerText = `R ${(income - expense).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        
+        localStorage.setItem('expo_v1_data', JSON.stringify(transactions));
+    }
+
+    function addTransaction() {
+        const desc = document.getElementById('desc').value;
+        const amount = document.getElementById('amount').value;
+        const date = document.getElementById('date').value;
+
+        if (!desc || !amount || !date) {
+            alert("All fields are required to record a transaction.");
+            return;
+        }
+
+        const newTransaction = {
+            id: transactions.length + 1,
+            description: desc,
+            amount: parseFloat(amount),
+            date: date
+        };
+
+        transactions.push(newTransaction);
+        updateUI();
+
+        // Clear only the description and amount for next entry
+        document.getElementById('desc').value = '';
+        document.getElementById('amount').value = '';
+    }
+
+    function clearRecords() {
+        if(confirm("This will permanently delete all transaction history. Proceed?")) {
+            transactions = [];
+            updateUI();
+        }
+    }
+
+    function downloadPDF() {
+        if(transactions.length === 0) {
+            alert("No data available to export.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(22);
+        doc.setTextColor(26, 26, 26);
+        doc.text("EXPO V1: FINANCIAL REPORT", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Report Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 28);
+
+        const tableData = transactions.map(t => [
+            t.id, 
+            t.date, 
+            t.description, 
+            `${t.amount >= 0 ? '+' : '-'} R ${Math.abs(t.amount).toFixed(2)}`
+        ]);
+
+        doc.autoTable({
+            startY: 35,
+            head: [['No.', 'Date', 'Description', 'Amount (Rands)']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 123, 255] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        const totalIncome = transactions.filter(t => t.amount >= 0).reduce((a, b) => a + b.amount, 0);
+        const totalExpense = transactions.filter(t => t.amount < 0).reduce((a, b) => a + Math.abs(b.amount), 0);
+
+        doc.text(`Total Earnings: R ${totalIncome.toFixed(2)}`, 14, finalY);
+        doc.text(`Total Expenditures: R ${totalExpense.toFixed(2)}`, 14, finalY + 7);
+        doc.text(`Net Balance: R ${(totalIncome - totalExpense).toFixed(2)}`, 14, finalY + 14);
+
+        doc.save("Expo_V1_Financial_Statement.pdf");
+    }
+
+    // Initialize date to today's date
+    document.getElementById('date').valueAsDate = new Date();
+    updateUI();
+</script>
+
+</body>
+</html>
