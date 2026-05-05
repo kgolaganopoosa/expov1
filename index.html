@@ -34,11 +34,12 @@
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            margin: 0; padding: 20px;
+            margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
         }
 
-        .app-container { width: 100%; max-width: 500px; }
+        .app-container { width: 100%; max-width: 500px; padding: 20px; flex-grow: 1; box-sizing: border-box; }
 
         header {
             width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
@@ -52,40 +53,65 @@
 
         .net-worth-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; margin-bottom: 8px; }
         .net-worth-value { 
-            font-size: clamp(24px, 8vw, 42px); font-weight: 800; margin: 0;
+            font-size: clamp(22px, 7vw, 40px); font-weight: 800; margin: 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .input-group {
             background: var(--card); padding: 25px; border-radius: 24px;
-            border: 1px solid #e0e0e0; margin-bottom: 25px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid #e0e0e0; margin-bottom: 25px;
         }
 
         input {
             width: 100%; padding: 14px; margin: 10px 0;
             border: 1px solid #dadce0; border-radius: 12px;
-            box-sizing: border-box; font-size: 16px; outline: none; transition: 0.2s;
+            box-sizing: border-box; font-size: 16px; outline: none;
         }
-        input:focus { border-color: var(--blue); }
 
         .btn {
             width: 100%; padding: 16px; border: none; border-radius: 14px;
             font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.2s;
         }
         .btn-primary { background: var(--blue); color: white; margin-top: 10px; }
-        .btn-primary:active { transform: scale(0.98); }
 
         .btn-outline {
             background: transparent; border: 1px solid #dadce0; color: var(--gray);
-            padding: 8px 12px; font-size: 12px; width: auto; font-weight: 600;
+            padding: 8px 12px; font-size: 11px; width: auto; font-weight: 600;
         }
 
         .history-card { background: var(--card); border-radius: 24px; border: 1px solid #e0e0e0; overflow: hidden; margin-bottom: 40px; }
-        .history-header { padding: 15px 20px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
+        .history-header { padding: 15px 20px; border-bottom: 1px solid #f1f1f1; }
         .history-item { padding: 16px 20px; border-bottom: 1px solid #f8f9fa; display: flex; justify-content: space-between; align-items: center; }
         
         .amount-pos { color: var(--green); font-weight: 700; }
         .amount-neg { color: var(--red); font-weight: 700; }
+
+        /* Footer */
+        footer {
+            background: var(--black); color: #888; width: 100%; padding: 40px 20px;
+            box-sizing: border-box; text-align: center; font-size: 12px;
+        }
+        .footer-links { margin: 15px 0; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .footer-links span { cursor: pointer; text-decoration: underline; transition: 0.2s; }
+        .footer-links span:hover { color: white; }
+
+        /* Modal / Popup Styles */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; z-index: 5000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 90%; max-width: 450px; max-height: 80vh;
+            border-radius: 24px; padding: 30px; overflow-y: auto; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .modal-header { font-size: 20px; font-weight: 800; margin-bottom: 15px; color: var(--black); }
+        .modal-body { font-size: 14px; line-height: 1.6; color: var(--text); }
+        .close-modal {
+            background: var(--black); color: white; border: none; padding: 10px 20px;
+            border-radius: 10px; margin-top: 20px; cursor: pointer; width: 100%; font-weight: 700;
+        }
 
         #install-prompt {
             position: fixed; bottom: 20px; left: 20px; right: 20px;
@@ -98,9 +124,9 @@
 
     <div class="app-container">
         <header>
-            <h1 style="margin:0; font-size: 22px; font-weight: 800;">EXPO V2</h1>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-outline" onclick="clearRecords()">Clear All</button>
+            <h1 style="margin:0; font-size: 20px; font-weight: 800;">EXPO V2</h1>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-outline" onclick="clearRecords()">Reset</button>
                 <button class="btn-outline" onclick="exportPDF()" style="color: var(--blue); border-color: var(--blue);">Download Report</button>
             </div>
         </header>
@@ -111,37 +137,76 @@
         </div>
 
         <div class="input-group">
-            <input type="text" id="desc" placeholder="Transaction Name">
-            <input type="number" id="amt" placeholder="Amount (e.g. 500 or -200)">
+            <input type="text" id="desc" placeholder="Label">
+            <input type="number" id="amt" placeholder="Amount (±)">
             <button class="btn btn-primary" onclick="addEntry()">Add Transaction</button>
         </div>
 
         <div class="history-card">
             <div class="history-header">
-                <span style="font-size: 13px; font-weight: 700; color: var(--gray);">RECENT LEDGER</span>
+                <span style="font-size: 12px; font-weight: 700; color: var(--gray);">HISTORY</span>
             </div>
             <div id="history"></div>
         </div>
     </div>
 
+    <footer>
+        <div style="font-weight: 800; color: white; font-size: 16px;">EXPO V2</div>
+        <div class="footer-links">
+            <span onclick="openModal('privacy')">Privacy Policy</span>
+            <span onclick="openModal('terms')">Terms of Use</span>
+            <span onclick="openModal('conditions')">Conditions</span>
+        </div>
+        <p>&copy; 2026 Expo V2 Accounting. All rights reserved.<br>Locally developed in Pretoria, South Africa.</p>
+    </footer>
+
+    <div id="modal-container" class="modal">
+        <div class="modal-content">
+            <div id="modal-header" class="modal-header"></div>
+            <div id="modal-body" class="modal-body"></div>
+            <button class="close-modal" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
     <div id="install-prompt">
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-            <div style="width:50px; height:50px; background:black; border-radius:12px; display:flex; align-items:center; justify-content:center;">
-                <div style="width:20px; height:20px; background:white; border-radius:50%;"></div>
+            <div style="width:40px; height:40px; background:black; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                <div style="width:15px; height:15px; background:white; border-radius:50%;"></div>
             </div>
-            <div>
-                <strong style="display:block;">Expo V2</strong>
-                <span style="font-size: 13px; color: var(--gray);">Install to your home screen</span>
-            </div>
+            <strong style="font-size: 14px;">Add Expo V2 to Home Screen</strong>
         </div>
-        <button class="btn btn-primary" onclick="installApp()" style="margin:0;">Install Now</button>
+        <button class="btn btn-primary" onclick="installApp()" style="margin:0;">Install</button>
     </div>
 
     <script>
-        let transactions = JSON.parse(localStorage.getItem('expo_v2_data')) || [];
+        let transactions = JSON.parse(localStorage.getItem('expo_v2_pwa_final')) || [];
         let deferredPrompt;
 
-        // PWA Service Worker Registration
+        // Legal Content
+        const legalData = {
+            privacy: {
+                title: "Privacy Policy",
+                body: "Expo V2 values your privacy. <strong>Data Storage:</strong> All financial data is stored locally on your device via LocalStorage. We do not transmit, sell, or view your transaction history. <strong>PWA Analytics:</strong> We do not track user behavior or location. Your data remains on your phone until you manually clear it."
+            },
+            terms: {
+                title: "Terms of Use",
+                body: "By using Expo V2, you agree that this application is provided 'as is' for personal financial tracking. <strong>Accuracy:</strong> While we strive for mathematical precision, Expo V2 is not a replacement for certified accounting software. Users are responsible for maintaining their own financial backups via the 'Download Report' feature."
+            },
+            conditions: {
+                title: "Terms & Conditions",
+                body: "<strong>Ownership:</strong> Expo V2 is a proprietary digital tool. <strong>Liability:</strong> We are not liable for financial losses, data corruption, or device failure. <strong>Local Use:</strong> This app is designed for standalone use. No cloud-syncing is currently offered, meaning clearing your browser cache may result in data loss."
+            }
+        };
+
+        function openModal(type) {
+            document.getElementById('modal-header').innerText = legalData[type].title;
+            document.getElementById('modal-body').innerHTML = legalData[type].body;
+            document.getElementById('modal-container').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modal-container').style.display = 'none'; }
+
+        // Core Logic
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const sw = `self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
@@ -151,8 +216,7 @@
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
+            e.preventDefault(); deferredPrompt = e;
             document.getElementById('install-prompt').style.display = 'block';
         });
 
@@ -177,8 +241,8 @@
                 item.className = 'history-item';
                 item.innerHTML = `
                     <div style="display:flex; flex-direction:column;">
-                        <span style="font-weight:600; font-size:14px;">${t.desc.toUpperCase()}</span>
-                        <span style="font-size:11px; color:var(--gray);">${t.date}</span>
+                        <span style="font-weight:600; font-size:13px;">${t.desc.toUpperCase()}</span>
+                        <span style="font-size:10px; color:var(--gray);">${t.date}</span>
                     </div>
                     <span class="${t.amount >= 0 ? 'amount-pos' : 'amount-neg'}">
                         ${t.amount >= 0 ? '+' : ''} R ${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}
@@ -188,7 +252,7 @@
             });
 
             balanceEl.innerText = `R ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            localStorage.setItem('expo_v2_data', JSON.stringify(transactions));
+            localStorage.setItem('expo_v2_pwa_final', JSON.stringify(transactions));
         }
 
         function addEntry() {
@@ -196,50 +260,27 @@
             const amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
 
-            transactions.push({ 
-                desc: desc, 
-                amount: amt, 
-                date: new Date().toLocaleDateString('en-ZA') 
-            });
+            transactions.push({ desc: desc, amount: amt, date: new Date().toLocaleDateString('en-ZA') });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
             updateUI();
         }
 
         function clearRecords() {
-            if (confirm("Are you sure? This will permanently delete all transaction history.")) {
-                transactions = [];
-                updateUI();
+            if (confirm("Permanently wipe all records?")) {
+                transactions = []; updateUI();
             }
         }
 
         function exportPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
             const totalNetWorth = transactions.reduce((acc, t) => acc + t.amount, 0);
-
-            doc.setFontSize(20);
-            doc.text("EXPO V2 FINANCIAL REPORT", 14, 20);
-            
+            doc.setFontSize(18); doc.text("EXPO V2: FINANCIAL REPORT", 14, 20);
             const tableBody = transactions.map(t => [t.date, t.desc.toUpperCase(), `R ${t.amount.toLocaleString()}`]);
-            
-            // Add Total row to the end of the data array
-            tableBody.push([
-                { content: 'TOTAL NET WORTH', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
-                { content: `R ${totalNetWorth.toLocaleString(undefined, {minimumFractionDigits: 2})}`, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }
-            ]);
-
-            doc.autoTable({
-                head: [['DATE', 'DESCRIPTION', 'AMOUNT']],
-                body: tableBody,
-                startY: 30,
-                theme: 'grid',
-                headStyles: { fillColor: [0, 0, 0] },
-                columnStyles: { 2: { halign: 'right' } }
-            });
-
-            doc.save("ExpoV2_Report.pdf");
+            tableBody.push([{ content: 'TOTAL NET WORTH', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } }, { content: `R ${totalNetWorth.toLocaleString(undefined, {minimumFractionDigits: 2})}`, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }]);
+            doc.autoTable({ head: [['DATE', 'LABEL', 'AMOUNT']], body: tableBody, startY: 30, theme: 'grid', headStyles: { fillColor: [0, 0, 0] } });
+            doc.save("ExpoV2_Statement.pdf");
         }
 
         updateUI();
