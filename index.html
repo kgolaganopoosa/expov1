@@ -3,273 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expo V2 | Financial App</title>
+    <title>Expo V2</title>
 
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Expo V2">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    
+    <meta name="apple-mobile-web-app-title" content="Expo V2">
+
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/><circle cx='50' cy='50' r='25' fill='white'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/><circle cx='50' cy='50' r='25' fill='white'/></svg>">
 
-    <link rel="manifest" href="data:application/manifest+json,{'name':'Expo V2','short_name':'Expo V2','start_url':'.','display':'standalone','background_color':'#ffffff','theme_color':'#ffffff','icons':[{'src':'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22black%22/><circle cx=%2250%22 cy=%2250%22 r=%2225%22 fill=%22white%22/></svg>','sizes':'512x512','type':'image/svg+xml'}]}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Expo%20V2%22,%22short_name%22:%22Expo%20V2%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23ffffff%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/><circle cx='50' cy='50' r='25' fill='white'/></svg>%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any%20maskable%22}]}">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
+
     <style>
         :root {
-            --bg-light: #f8f9fa;
-            --surface: #ffffff;
-            --text-main: #202124;
-            --text-sub: #5f6368;
-            --google-blue: #1a73e8;
-            --success-green: #34a853;
-            --danger-red: #ea4335;
-            --tier-starter: #34a853;
-            --tier-elite: #0d47a1;
-            --tier-prestige: #1a1a1a;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #202124;
+            --blue: #1a73e8;
+            --green: #34a853;
+            --red: #ea4335;
+            --black: #1a1a1a;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-main);
-            margin: 0; padding: 15px; display: flex; justify-content: center;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .container { width: 100%; max-width: 800px; }
-
-        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .app-header h1 { font-size: 22px; font-weight: 700; margin: 0; }
-
-        /* Optimized Hero Card for Large Numbers */
-        .balance-hero {
-            background: var(--tier-starter);
-            color: white; padding: 30px; border-radius: 24px; margin-bottom: 24px;
-            transition: background 0.5s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: left; overflow: hidden;
+        .app-container {
+            width: 100%;
+            max-width: 500px;
         }
-        .balance-hero.tier-mid { background: var(--tier-elite); }
-        .balance-hero.tier-high { background: var(--tier-prestige); }
 
-        .balance-label { font-size: 12px; font-weight: 600; text-transform: uppercase; opacity: 0.8; letter-spacing: 0.5px; }
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .hero-card {
+            background: var(--black);
+            color: white;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .net-worth-label { font-size: 14px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Dynamic Font Sizing: Scales between 24px and 48px based on viewport width */
-        .balance-val { 
-            font-size: clamp(24px, 6vw, 44px); 
+        /* Dynamic sizing for huge numbers */
+        .net-worth-value { 
+            font-size: clamp(24px, 8vw, 42px); 
             font-weight: 800; 
-            margin: 12px 0; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            letter-spacing: -1px;
+            margin: 10px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .timeline-bg { height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; width: 100%; margin-top: 15px; }
-        .timeline-fill { height: 100%; background: white; border-radius: 10px; width: 0%; transition: width 1s ease; }
-
-        /* UI Components */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--surface); padding: 18px; border-radius: 20px; border: 1px solid #e0e0e0; }
-        .stat-card small { color: var(--text-sub); font-size: 10px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .stat-card div { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .action-card { background: var(--surface); padding: 20px; border-radius: 20px; border: 1px solid #e0e0e0; margin-bottom: 25px; }
-        .input-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
-        input { padding: 12px; border: 1px solid #dadce0; border-radius: 10px; font-size: 14px; outline: none; background: #fafafa; width: 100%; box-sizing: border-box; }
-        input:focus { border-color: var(--google-blue); background: #fff; }
-
-        .btn { padding: 12px 18px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-add { background: var(--google-blue); color: white; width: 100%; margin-top: 12px; font-size: 15px; }
-        .btn-outline { background: transparent; border: 1px solid #dadce0; color: var(--text-sub); padding: 6px 12px; font-size: 11px; }
-
-        .history-card { background: var(--surface); border-radius: 20px; border: 1px solid #e0e0e0; overflow: hidden; margin-bottom: 80px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa; padding: 12px 15px; text-align: left; font-size: 11px; color: var(--text-sub); border-bottom: 1px solid #eee; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; font-size: 13px; }
-
-        /* PWA Modal */
-        #install-overlay {
-            position: fixed; bottom: 0; left: 0; right: 0; top: 0;
-            background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center;
-            z-index: 9999; padding-bottom: 20px;
+        .input-group {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
         }
-        .install-box {
-            background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 24px;
-            text-align: center; box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
-        }
-        .app-icon { width: 50px; height: 50px; background: black; border-radius: 12px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
 
-        @media (max-width: 600px) { .input-row, .stats-grid { grid-template-columns: 1fr; } }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: var(--blue);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .history-card {
+            background: var(--card);
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            overflow: hidden;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .amount-pos { color: var(--green); font-weight: bold; }
+        .amount-neg { color: var(--red); font-weight: bold; }
+
+        /* Install Prompt Styling */
+        #install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            border: 1px solid var(--blue);
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header class="app-header">
-        <h1>Expo <span style="color: var(--google-blue);">V2</span></h1>
-        <button class="btn btn-outline" onclick="clearRecords()">Reset Data</button>
-    </header>
+    <div class="app-container">
+        <header>
+            <h1 style="font-size: 24px;">Expo V2</h1>
+            <button onclick="exportPDF()" style="width: auto; padding: 8px 15px; font-size: 12px; margin: 0;">PDF</button>
+        </header>
 
-    <div id="hero-card" class="balance-hero">
-        <div class="balance-label">Total Net Worth</div>
-        <div class="balance-val" id="net-balance">R 0.00</div>
-        <div id="tier-name" style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Starter Tier</div>
-        <div class="timeline-bg">
-            <div id="progress-bar" class="timeline-fill"></div>
+        <div class="hero-card">
+            <div class="net-worth-label">Total Net Worth</div>
+            <div class="net-worth-value" id="balance">R 0.00</div>
         </div>
+
+        <div class="input-group">
+            <input type="text" id="desc" placeholder="Transaction Name (e.g., Salary)">
+            <input type="number" id="amt" placeholder="Amount (e.g., 500 or -50)">
+            <button onclick="addEntry()">Add Transaction</button>
+        </div>
+
+        <div class="history-card" id="history">
+            </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <small>Earnings</small>
-            <div style="color: var(--success-green);" id="total-income">R 0.00</div>
+    <div id="install-prompt">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width:40px; height:40px; background:black; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                <div style="width:15px; height:15px; background:white; border-radius:50%;"></div>
+            </div>
+            <strong>Install Expo V2?</strong>
         </div>
-        <div class="stat-card">
-            <small>Expenses</small>
-            <div style="color: var(--danger-red);" id="total-expense">R 0.00</div>
-        </div>
+        <button onclick="installApp()" style="padding: 10px; margin: 0;">Install App</button>
     </div>
 
-    <div class="action-card">
-        <div class="input-row">
-            <input type="text" id="desc" placeholder="Transaction Name">
-            <input type="number" id="amount" placeholder="Amount (±)">
-            <input type="date" id="date">
-        </div>
-        <button class="btn btn-add" onclick="addTransaction()">Record Transaction</button>
-    </div>
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('expo_data')) || [];
+        let deferredPrompt;
 
-    <div class="history-card">
-        <div style="padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
-            <h3 style="margin:0; font-size: 14px;">Transaction Ledger</h3>
-            <button class="btn btn-outline" onclick="downloadPDF()">Export PDF</button>
-        </div>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr><th>Date</th><th>Item</th><th style="text-align: right;">Value</th></tr>
-                </thead>
-                <tbody id="list-body"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div id="install-overlay">
-    <div class="install-box">
-        <div class="app-icon"><div style="width:20px; height:20px; background:white; border-radius:50%;"></div></div>
-        <h2 style="margin:0 0 8px; font-size: 18px;">Install Expo V2</h2>
-        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">Save to your home screen for full-screen usage and offline access.</p>
-        <button class="btn btn-add" id="pwa-install-btn" style="margin-top:0;">Add to Home Screen</button>
-        <button class="btn btn-outline" style="width:100%; margin-top:10px; border:none;" onclick="closeInstallModal()">Not now</button>
-    </div>
-</div>
-
-<script>
-    let transactions = JSON.parse(localStorage.getItem('expo_v2_ultra_data')) || [];
-    let deferredPrompt;
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            const swSource = `
-                self.addEventListener('install', e => e.waitUntil(caches.open('v2').then(c => c.addAll(['./']))));
-                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-            `;
-            const blob = new Blob([swSource], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-        });
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        setTimeout(() => { document.getElementById('install-overlay').style.display = 'flex'; }, 3000);
-    });
-
-    document.getElementById('pwa-install-btn').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') closeInstallModal();
-            deferredPrompt = null;
-        } else {
-            alert("To install: Tap the browser menu/share icon and select 'Add to Home Screen'.");
-            closeInstallModal();
+        // --- PWA Logic ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const sw = `
+                    self.addEventListener('install', e => e.waitUntil(caches.open('expo-v2').then(c => c.addAll(['./']))));
+                    self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+                `;
+                const blob = new Blob([sw], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob));
+            });
         }
-    });
 
-    function closeInstallModal() { document.getElementById('install-overlay').style.display = 'none'; }
-
-    function updateUI() {
-        const listBody = document.getElementById('list-body');
-        listBody.innerHTML = '';
-        let income = 0, expense = 0;
-
-        [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-            if(t.amount > 0) income += t.amount;
-            else expense += Math.abs(t.amount);
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${t.date}</td>
-                <td style="font-weight: 500;">${t.description.toUpperCase()}</td>
-                <td style="text-align: right; font-weight: 700; color: ${t.amount >= 0 ? 'var(--success-green)' : 'var(--danger-red)'}">
-                    ${t.amount >= 0 ? '+' : '-'} R ${Math.abs(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
-                </td>
-            `;
-            listBody.appendChild(row);
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-prompt').style.display = 'block';
         });
 
-        const net = income - expense;
-        document.getElementById('total-income').innerText = `R ${income.toLocaleString()}`;
-        document.getElementById('total-expense').innerText = `R ${expense.toLocaleString()}`;
-        document.getElementById('net-balance').innerText = `R ${net.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-        
-        updateTier(net);
-        localStorage.setItem('expo_v2_ultra_data', JSON.stringify(transactions));
-    }
-
-    function updateTier(net) {
-        const hero = document.getElementById('hero-card');
-        const prog = document.getElementById('progress-bar');
-        const label = document.getElementById('tier-name');
-        hero.classList.remove('tier-mid', 'tier-high');
-        
-        let percentage = 0;
-        if(net >= 100000) {
-            hero.classList.add('tier-high'); label.innerText = "Prestige Tier"; percentage = 100;
-        } else if (net >= 10000) {
-            hero.classList.add('tier-mid'); label.innerText = "Elite Tier"; percentage = ((net - 10000) / 90000) * 100;
-        } else {
-            label.innerText = "Starter Tier"; percentage = (Math.max(0, net) / 10000) * 100;
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('install-prompt').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
         }
-        prog.style.width = Math.min(100, Math.max(0, percentage)) + "%";
-    }
 
-    function addTransaction() {
-        const desc = document.getElementById('desc').value, amt = parseFloat(document.getElementById('amount').value), date = document.getElementById('date').value;
-        if (!desc || isNaN(amt) || !date) return;
-        transactions.push({ description: desc, amount: amt, date: date });
+        // --- App Logic ---
+        function updateUI() {
+            const history = document.getElementById('history');
+            const balanceEl = document.getElementById('balance');
+            history.innerHTML = '';
+            let total = 0;
+
+            transactions.forEach((t, i) => {
+                total += t.amount;
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span>${t.desc}</span>
+                    <span class="${t.amount >= 0 ? 'amount-pos' : 'amount-neg'}">
+                        ${t.amount >= 0 ? '+' : ''} R ${t.amount.toLocaleString()}
+                    </span>
+                `;
+                history.prepend(item);
+            });
+
+            balanceEl.innerText = `R ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            localStorage.setItem('expo_data', JSON.stringify(transactions));
+        }
+
+        function addEntry() {
+            const desc = document.getElementById('desc').value;
+            const amt = parseFloat(document.getElementById('amt').value);
+            if(!desc || isNaN(amt)) return;
+
+            transactions.push({ desc, amount: amt, date: new Date().toLocaleDateString() });
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
+            updateUI();
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Expo V2 Financial Report", 14, 15);
+            const data = transactions.map(t => [t.date, t.desc, `R ${t.amount}`]);
+            doc.autoTable({ head: [['Date', 'Description', 'Amount']], body: data, startY: 20 });
+            doc.save("ExpoV2_Report.pdf");
+        }
+
         updateUI();
-        document.getElementById('desc').value = ''; document.getElementById('amount').value = '';
-    }
-
-    function clearRecords() { if(confirm("Wipe all data?")) { transactions = []; updateUI(); } }
-
-    function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(20); doc.text("EXPO V2: FINANCIAL REPORT", 14, 20);
-        const tableData = transactions.map(t => [t.date, t.description, `R ${t.amount.toFixed(2)}`]);
-        doc.autoTable({ startY: 30, head: [['Date', 'Item', 'Amount']], body: tableData });
-        doc.save("Expo_V2_Report.pdf");
-    }
-
-    document.getElementById('date').valueAsDate = new Date();
-    updateUI();
-</script>
+    </script>
 </body>
 </html>
